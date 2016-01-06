@@ -63,7 +63,8 @@
     <target name="compile" depends="git-revision,resolve" description="Compile Java code and tools">
         <!-- If the build directory doesn't already exist, create it -->
         <mkdir dir="${dir.build}" />
-        <javac includes="**/*.java" destdir="${dir.build}" debug="true" includeantruntime="false">
+        <javac includes="**/*.java" destdir="${dir.build}" debug="true" includeantruntime="false"
+            source="1.7" target="1.7">
             <src path="${dir.src}" />
             <src path="java/berkeley-src" />
             <classpath>
@@ -267,6 +268,15 @@
     </target>
 
 
+    <target name="jevalb" depends="compile">
+        <antcall target="package-tool">
+            <param name="root-class" value="edu.ohsu.cslu.util.Evalb" />
+            <param name="tool-name" value="jevalb" />
+            <param name="heap-size" value="1g" />
+        </antcall>
+    </target>
+
+
     <!-- -->
     <!-- Pruning and prioritization model training tools -->
     <!-- -->
@@ -366,9 +376,10 @@
         <antcall target="package-tool">
             <param name="root-class" value="edu.ohsu.cslu.perceptron.Tagger" />
             <param name="tool-name" value="tag" />
-            <param name="heap-size" value="1500m" />
+            <param name="heap-size" value="512m" />
             <param name="javadoc-help" value="true" />
             <param name="license-file" value="java/tools/license.txt" />
+            <param name="srcjar" value="true" />
         </antcall>
     </target>
 
@@ -496,6 +507,15 @@
         <tar destfile="${file.dist}" compression="gzip">
             <tarfileset dir="${dir.dist}" includes="parse,parse.jar,parse-src.jar" prefix="bubs-parser" />
             <tarfileset dir="${dir.models}" includes="wsj_l0mm*.gz,wsj_cc.mdl.995" prefix="bubs-parser" />
+        </tar>
+    </target>
+
+    <target name="tagger-dist" depends="tag">
+        <tstamp />
+        <property name="file.dist" value="${dir.dist}/bubs-tagger-${DSTAMP}.tgz" />
+        <tar destfile="${file.dist}" compression="gzip">
+            <tarfileset dir="${dir.dist}" includes="tag,tag.jar,tag-src.jar" prefix="bubs-tagger" />
+            <tarfileset dir="${dir.models}" includes="wsj_pos.mdl" prefix="bubs-tagger" />
         </tar>
     </target>
 
