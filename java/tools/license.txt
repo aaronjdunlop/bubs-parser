@@ -1,5 +1,5 @@
 Unless otherwise noted in the source code, this software is 
-    Copyright 2010-2012 Nathan Bodenstab and Aaron Dunlop.
+    Copyright 2010-2014 Oregon Health & Science University
 
 This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as 
@@ -27,9 +27,10 @@ Exceptions and notes:
     cltool4j.args4j under the MIT license in place of the Apache License 2.0.
 
     The fastutil project (the it.unimi.dsi.fastutil package) is distributed 
-    under the LGPL. You are free to use the fastutil code distributed with 
-    this project under the terms of the LGPL, but if you wish to make use of
-    fastutil, we recommend you download it in its entirety directly from 
+    under the Apache License 2.0. <http://www.apache.org/licenses/LICENSE-2.0.html>
+    You are free to use the fastutil code distributed with this project under 
+    the terms of the Apache License, but if you wish to make use of fastutil, 
+    we recommend you download it in its entirety directly from 
     <http://fastutil.dsi.unimi.it/>.
 
 =============================================================================
