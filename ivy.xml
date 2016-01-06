@@ -28,11 +28,11 @@
         <!-- -->
         <!-- BSD / Apache -->
         <!-- -->
-        <dependency org="com.google.code.cltool4j" name="cltool4j" rev="1.0.6" conf="bsd->default" />
-        <dependency org="it.unimi.dsi" name="fastutil" rev="7.0.9" conf="bsd->default" />
-        <dependency org="junit" name="junit" rev="4.12" conf="bsd->default" />
+        <dependency org="com.google.code.cltool4j" name="cltool4j" rev="1.0.6" conf="bsd->default,sources" />
+        <dependency org="it.unimi.dsi" name="fastutil" rev="7.0.9" conf="bsd->default,sources" />
+        <dependency org="junit" name="junit" rev="4.12" conf="bsd->default,sources" />
         <!-- The servlet API is licensed under CDDL as well as GPL, so we can put it in the BSD-style group -->
-        <dependency org="javax.servlet" name="javax.servlet-api" rev="3.0.1" conf="bsd->default" />
+        <dependency org="javax.servlet" name="javax.servlet-api" rev="3.0.1" conf="bsd->default,sources" />
 
         <!-- -->
         <!-- GPL / LGPL -->
