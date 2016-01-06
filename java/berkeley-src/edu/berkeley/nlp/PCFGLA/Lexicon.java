@@ -820,11 +820,11 @@ public class Lexicon implements java.io.Serializable {
                 substateCounter[substate] += weight;
                 // update the counters
                 tagCounter[state][substate] += weight;
-                wordCounter.add(word, weight);
+                wordCounter.addTo(word, weight);
                 totalTokens += weight;
 
                 if (oldLexicon != null && oldLexicon.wordCounter.getDouble(word) < rareWordThreshold + 0.5) {
-                    wordCounter.add(sig, weight);
+                    wordCounter.addTo(sig, weight);
                     if (unseenWordSubstateCounter != null) {
                         unseenWordSubstateCounter[substate] += weight;
                     }

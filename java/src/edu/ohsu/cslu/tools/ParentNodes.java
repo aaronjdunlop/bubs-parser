@@ -52,7 +52,7 @@ public class ParentNodes extends BaseCommandlineTool {
             for (final NaryTree<String> node : tree.inOrderTraversal()) {
                 final Object2IntOpenHashMap<String> counts = map.get(node.label());
                 if (counts != null && node.parent() != null) {
-                    counts.add(node.parentLabel(), 1);
+                    counts.addTo(node.parentLabel(), 1);
                 }
             }
         }

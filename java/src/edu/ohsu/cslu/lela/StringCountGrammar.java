@@ -276,7 +276,8 @@ public final class StringCountGrammar implements CountGrammar {
      * @param comparator Sort order for the induced vocabulary. If null, non-terminals will be ordered in the order of
      *            their observation, starting with the start symbol.
      * 
-     * @return A {@link MutableEnumeration} induced from the observed non-terminals, sorted according to the supplied comparator.
+     * @return A {@link MutableEnumeration} induced from the observed non-terminals, sorted according to the supplied
+     *         comparator.
      */
     public final SplitVocabulary induceVocabulary(final Comparator<String> comparator) {
         final ArrayList<String> nts = new ArrayList<String>(observedNonTerminals);
@@ -418,7 +419,8 @@ public final class StringCountGrammar implements CountGrammar {
         return lexicalProductions(vocabulary, induceLexicon());
     }
 
-    public ArrayList<Production> lexicalProductions(final MutableEnumeration<String> vocabulary, final MutableEnumeration<String> lexicon) {
+    public ArrayList<Production> lexicalProductions(final MutableEnumeration<String> vocabulary,
+            final MutableEnumeration<String> lexicon) {
 
         final ArrayList<Production> prods = new ArrayList<Production>();
 
@@ -458,7 +460,7 @@ public final class StringCountGrammar implements CountGrammar {
 
             for (final String word : childMap.keySet()) {
                 final int index = lexicon.getIndex(word);
-                wordCounts.add(index, Math.round(childMap.getFloat(word)));
+                wordCounts.addTo(index, Math.round(childMap.getFloat(word)));
             }
         }
         return wordCounts;
@@ -471,7 +473,7 @@ public final class StringCountGrammar implements CountGrammar {
 
         for (final String word : sentenceInitialWordCounts.keySet()) {
             final int index = lexicon.getIndex(word);
-            wordCounts.add(index, Math.round(sentenceInitialWordCounts.getFloat(word)));
+            wordCounts.addTo(index, Math.round(sentenceInitialWordCounts.getFloat(word)));
         }
         return wordCounts;
     }

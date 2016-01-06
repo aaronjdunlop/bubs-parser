@@ -106,8 +106,8 @@ public class SummarizeGrammar extends BaseCommandlineTool {
                 vocabulary.addSymbol(child2);
                 phraseSet.add(parent);
 
-                grammarColumnEntries.add(child1 + '_' + child2, 1);
-                grammarRowEntries.add(parent, 1);
+                grammarColumnEntries.addTo(child1 + '_' + child2, 1);
+                grammarRowEntries.addTo(parent, 1);
             } else {
                 throw new IllegalArgumentException("Unexpected line in grammar PCFG\n\t" + line);
             }
@@ -131,7 +131,7 @@ public class SummarizeGrammar extends BaseCommandlineTool {
             final String pos = tokens[0];
             vocabulary.addSymbol(pos);
             posSet.add(pos);
-            posLexicalChildren.add(pos, 1);
+            posLexicalChildren.addTo(pos, 1);
         }
 
         // Size of POS and phrase-level non-terminal sets

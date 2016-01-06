@@ -321,7 +321,7 @@ public final class BoundaryLex extends FigureOfMeritModel {
                 try {
                     final NaryTree<String> tree = NaryTree.read(line, String.class);
                     for (final String token : tree.leafLabels()) {
-                        lexCounts.add(token, 1);
+                        lexCounts.addTo(token, 1);
                     }
                 } catch (final IllegalArgumentException ignore) {
                     // Skip any lines that aren't well-formed trees. This lets us use 'normal' parser output directly,

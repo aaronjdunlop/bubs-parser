@@ -65,7 +65,7 @@ public abstract class BaseTextNormalizationTool extends BaseCommandlineTool {
         for (final String line : inputLines(br)) {
             final NaryTree<String> tree = NaryTree.read(line.trim(), String.class);
             for (final NaryTree<String> leafNode : tree.leafTraversal()) {
-                lexicon.add(key(leafNode), 1);
+                lexicon.addTo(key(leafNode), 1);
             }
         }
         return lexicon;

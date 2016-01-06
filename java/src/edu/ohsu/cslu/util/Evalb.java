@@ -55,11 +55,14 @@ public class Evalb extends BaseCommandlineTool {
     @Option(name = "-f", metaVar = "format", usage = "Grammar format")
     private GrammarFormatType grammarFormatType = GrammarFormatType.Berkeley;
 
+    @Option(name = "-e", usage = "Evaluate empty trees (failed parses)")
+    private boolean evaluateEmptyTrees;
+
     @Override
     protected void run() throws Exception {
 
         final EvalbResult result = eval(new FileReader(goldTrees), inputAsBufferedReader(), grammarFormatType,
-                BaseLogger.singleton().isLoggable(Level.FINE));
+                evaluateEmptyTrees, BaseLogger.singleton().isLoggable(Level.FINE));
 
         System.out.format("LP: %.2f LR: %.2f F1: %.2f Exact: %.2f\n", result.precision() * 100, result.recall() * 100,
                 result.f1() * 100, result.exactMatch());
@@ -75,6 +78,12 @@ public class Evalb extends BaseCommandlineTool {
 
     public static EvalbResult eval(final Reader goldTreeReader, final Reader parsedTreeReader,
             final GrammarFormatType grammarFormatType, final boolean verbose) throws IOException {
+        return eval(goldTreeReader, parsedTreeReader, grammarFormatType, false, verbose);
+    }
+
+    public static EvalbResult eval(final Reader goldTreeReader, final Reader parsedTreeReader,
+            final GrammarFormatType grammarFormatType, final boolean evaluateEmptyTrees, final boolean verbose)
+            throws IOException {
 
         final BufferedReader br1 = new BufferedReader(goldTreeReader);
         final BufferedReader br2 = new BufferedReader(parsedTreeReader);
@@ -87,15 +96,21 @@ public class Evalb extends BaseCommandlineTool {
 
             final NaryTree<String> goldTree = NaryTree.read(goldLine, String.class);
 
+            NaryTree<String> parsedTree;
             // Skip empty trees (Note: BracketEvaluator can accumulate the negative score impact of empty and null
             // parses, but we skip them in the command-line tool to match the behavior of evalb)
-            if (parsedLine.equals("()") || parsedLine.equals("")) {
-                continue;
-            }
-
-            NaryTree<String> parsedTree = NaryTree.read(parsedLine, String.class);
-            if (parsedTree.isBinaryTree()) {
-                parsedTree = BinaryTree.read(parsedLine, String.class).unfactor(grammarFormatType);
+            if (parsedLine.equals("()") || parsedLine.equals("") || parsedLine.equals("(ROOT)")
+                    || parsedLine.equals("(TOP)")) {
+                if (evaluateEmptyTrees) {
+                    parsedTree = null;
+                } else {
+                    continue;
+                }
+            } else {
+                parsedTree = NaryTree.read(parsedLine, String.class);
+                if (parsedTree.isBinaryTree()) {
+                    parsedTree = BinaryTree.read(parsedLine, String.class).unfactor(grammarFormatType);
+                }
             }
 
             try {
@@ -176,8 +191,7 @@ public class Evalb extends BaseCommandlineTool {
                 }
 
                 // Ensure all ignored pre-terminals in the gold tree are also properly labeled in the parse tree (so
-                // that
-                // when we remove them, the node indices will match).
+                // that when we remove them, the node indices will match).
                 final Tree<String> parseTreeClone = parseTree.clone();
                 int i = 0;
                 for (final Tree<String> leaf : parseTreeClone.leafTraversal()) {

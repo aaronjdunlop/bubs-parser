@@ -1225,8 +1225,8 @@ public class Grammar implements Serializable, Cloneable {
                 final short parentIndex = indices[unsplitParent][parentSplit];
 
                 final int childPair = leftChildIndex << 16 | rightChildIndex;
-                columnEntries.add(childPair, 1);
-                rowEntries.add(parentIndex, 1);
+                columnEntries.addTo(childPair, 1);
+                rowEntries.addTo(parentIndex, 1);
             }
         }
 

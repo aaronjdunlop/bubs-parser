@@ -127,8 +127,8 @@ public class FractionalCountGrammar implements CountGrammar, Cloneable {
             leftChildMap.put(leftChild, rightChildMap);
         }
 
-        rightChildMap.add(rightChild, increment);
-        parentCounts.add(parent, increment);
+        rightChildMap.addTo(rightChild, increment);
+        parentCounts.addTo(parent, increment);
     }
 
     public void incrementBinaryCount(final short parent, final int childPair, final double increment) {
@@ -164,8 +164,8 @@ public class FractionalCountGrammar implements CountGrammar, Cloneable {
             unaryRuleCounts.put(parent, childMap);
         }
 
-        childMap.add(child, increment);
-        parentCounts.add(parent, increment);
+        childMap.addTo(child, increment);
+        parentCounts.addTo(parent, increment);
     }
 
     public void incrementUnaryLogCount(final short parent, final short child, final float logIncrement) {
@@ -191,11 +191,11 @@ public class FractionalCountGrammar implements CountGrammar, Cloneable {
             lexicalRuleCounts.put(parent, childMap);
         }
 
-        childMap.add(child, increment);
-        parentCounts.add(parent, increment);
+        childMap.addTo(child, increment);
+        parentCounts.addTo(parent, increment);
 
         if (corpusWordCounts != null && corpusWordCounts.get(child) < rareWordThreshold) {
-            rareWordParentCounts.add(parent, increment);
+            rareWordParentCounts.addTo(parent, increment);
         }
     }
 
@@ -410,13 +410,14 @@ public class FractionalCountGrammar implements CountGrammar, Cloneable {
                 if (cw < rareWordThreshold) {
                     // Sentence-initial counts
                     final int sentenceInitialCounts = sentenceInitialCorpusWordCounts.get(word);
-                    final String sentenceInitialUnkClass = DecisionTreeTokenClassifier.berkeleyGetSignature(lexicon.getSymbol(word),
-                            true, lexicon);
+                    final String sentenceInitialUnkClass = DecisionTreeTokenClassifier.berkeleyGetSignature(
+                            lexicon.getSymbol(word), true, lexicon);
                     grammarWithUnks.incrementLexicalCount(parent, lexicon.getIndex(sentenceInitialUnkClass), s_2 * pRTx
                             * sentenceInitialCounts / cw);
 
                     // Other counts
-                    final String unkClass = DecisionTreeTokenClassifier.berkeleyGetSignature(lexicon.getSymbol(word), false, lexicon);
+                    final String unkClass = DecisionTreeTokenClassifier.berkeleyGetSignature(lexicon.getSymbol(word),
+                            false, lexicon);
                     grammarWithUnks.incrementLexicalCount(parent, lexicon.getIndex(unkClass), s_2 * pRTx
                             * (1 - sentenceInitialCounts / cw));
                 }

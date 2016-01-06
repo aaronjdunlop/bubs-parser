@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2014, Oregon Health & Science University
+ * Copyright 2010-2015, Oregon Health & Science University
  * 
  * This file is part of the BUBS Parser.
  * 
