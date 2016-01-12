@@ -1,7 +1,5 @@
 package edu.berkeley.nlp.PCFGLA;
 
-import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
-
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
@@ -14,11 +12,13 @@ import edu.berkeley.nlp.syntax.Tree;
 import edu.berkeley.nlp.util.Numberer;
 import edu.ohsu.cslu.util.IEEEDoubleScaling;
 import edu.ohsu.cslu.util.Math;
+import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 
 /**
  * Simple default implementation of a lexicon, which scores word, tag pairs with a smoothed estimate of
  * P(tag|word)/P(tag).
- * 
+ *
  * for simplicity the lexicon will store words and tags as strings, while the grammar will be using integers ->
  * Numberer()
  */
@@ -30,13 +30,13 @@ public class Lexicon implements java.io.Serializable {
      * Fractional occurrence counts for each observed token/tag combination. Indexed by state. {@link HashMap}s map
      * token to an array of counts for each substate.
      */
-    final HashMap<String, double[]>[] observedTokenFractionalCounts;
+    final Object2ObjectOpenHashMap<String, double[]>[] observedTokenFractionalCounts;
 
     /**
      * Fractional occurrence counts for UNK-class/tag combination. Indexed by state. {@link HashMap}s map token to an
      * array of counts for each substate.
      */
-    final HashMap<String, double[]>[] unkFractionalCounts;
+    final Map<String, double[]>[] unkFractionalCounts;
 
     double totalTokens = 0.0;
     double totalUnseenTokens = 0.0;
@@ -62,8 +62,8 @@ public class Lexicon implements java.io.Serializable {
      * Cache unknown-word signatures - we'll always return the same signature for a word; the signature for a word
      * differs in sentence-initial position, so we maintain 2 caches
      */
-    protected transient HashMap<String, String> cachedSignatures = new HashMap<String, String>();
-    protected transient HashMap<String, String> cachedSentenceInitialSignatures = new HashMap<String, String>();
+    protected transient Map<String, String> cachedSignatures = new Object2ObjectOpenHashMap<String, String>();
+    protected transient Map<String, String> cachedSentenceInitialSignatures = new Object2ObjectOpenHashMap<String, String>();
     // TODO We can probably remove this option - it's never changed
     private int unknownLevel = 5; // different modes for unknown words, 5 is
                                   // english specific
@@ -83,7 +83,7 @@ public class Lexicon implements java.io.Serializable {
     /**
      * Create a blank Lexicon object. Fill it by calling tallyStateSetTree for each training tree, then calling
      * optimize().
-     * 
+     *
      * @param numSubStates
      * @param smoothingParams
      * @param smoother
@@ -95,18 +95,18 @@ public class Lexicon implements java.io.Serializable {
     @SuppressWarnings("unchecked")
     public Lexicon(final short[] numSubStates, final double[] smoothingParams, final Smoother smoother,
             final boolean learnUnknownWordRules, final double minRuleProbability) {
-        this(numSubStates, smoothingParams, smoother, learnUnknownWordRules ? new HashMap[numSubStates.length] : null,
-                minRuleProbability);
+        this(numSubStates, smoothingParams, smoother,
+                learnUnknownWordRules ? new Object2ObjectOpenHashMap[numSubStates.length] : null, minRuleProbability);
     }
 
     @SuppressWarnings({ "unchecked" })
     private Lexicon(final short[] numSubStates, final double[] smoothingParams, final Smoother smoother,
-            final HashMap<String, double[]>[] unkFractionalCounts, final double minRuleProbability) {
+            final Map<String, double[]>[] unkFractionalCounts, final double minRuleProbability) {
 
         this.numSubStates = numSubStates;
         this.smoothingParams = smoothingParams;
         this.smoother = smoother;
-        this.observedTokenFractionalCounts = new HashMap[numSubStates.length];
+        this.observedTokenFractionalCounts = new Object2ObjectOpenHashMap[numSubStates.length];
 
         this.unkFractionalCounts = unkFractionalCounts;
 
@@ -124,7 +124,7 @@ public class Lexicon implements java.io.Serializable {
      * Split all substates in two, producing a new lexicon. The new Lexicon gives the same scores to words under both
      * split versions of the tag. (Leon says: It may not be okay to use the same scores, but I think that symmetry is
      * sufficiently broken in Grammar.splitAllStates to ignore the randomness here.)
-     * 
+     *
      * @param counts
      * @param moreSubstatesThanCounts
      * @return A new lexicon, with all states split in 2
@@ -143,7 +143,7 @@ public class Lexicon implements java.io.Serializable {
         // copy and alter all data structures
         for (int tag = 0; tag < observedTokenFractionalCounts.length; tag++) {
             if (observedTokenFractionalCounts[tag] != null) {
-                newLexicon.observedTokenFractionalCounts[tag] = new HashMap<String, double[]>();
+                newLexicon.observedTokenFractionalCounts[tag] = new Object2ObjectOpenHashMap<String, double[]>();
                 for (final String word : observedTokenFractionalCounts[tag].keySet()) {
                     newLexicon.observedTokenFractionalCounts[tag].put(word, new double[newNumSubStates[tag]]);
                     for (int substate = 0; substate < observedTokenFractionalCounts[tag].get(word).length; substate++) {
@@ -152,8 +152,8 @@ public class Lexicon implements java.io.Serializable {
                             splitFactor = 1;
                         }
                         for (int i = 0; i < splitFactor; i++) {
-                            newLexicon.observedTokenFractionalCounts[tag].get(word)[substate * splitFactor + i] = (1.f / splitFactor)
-                                    * observedTokenFractionalCounts[tag].get(word)[substate];
+                            newLexicon.observedTokenFractionalCounts[tag].get(word)[substate * splitFactor
+                                    + i] = (1.f / splitFactor) * observedTokenFractionalCounts[tag].get(word)[substate];
                         }
                     }
                 }
@@ -164,7 +164,7 @@ public class Lexicon implements java.io.Serializable {
         if (unkFractionalCounts != null) {
             for (int tag = 0; tag < unkFractionalCounts.length; tag++) {
                 if (unkFractionalCounts[tag] != null) {
-                    newLexicon.unkFractionalCounts[tag] = new HashMap<String, double[]>();
+                    newLexicon.unkFractionalCounts[tag] = new Object2ObjectOpenHashMap<String, double[]>();
                     for (final String word : unkFractionalCounts[tag].keySet()) {
                         newLexicon.unkFractionalCounts[tag].put(word, new double[newNumSubStates[tag]]);
                         for (int substate = 0; substate < unkFractionalCounts[tag].get(word).length; substate++) {
@@ -173,8 +173,8 @@ public class Lexicon implements java.io.Serializable {
                                 splitFactor = 1;
                             }
                             for (int i = 0; i < splitFactor; i++) {
-                                newLexicon.unkFractionalCounts[tag].get(word)[substate * splitFactor + i] = (1.f / splitFactor)
-                                        * unkFractionalCounts[tag].get(word)[substate];
+                                newLexicon.unkFractionalCounts[tag].get(word)[substate * splitFactor
+                                        + i] = (1.f / splitFactor) * unkFractionalCounts[tag].get(word)[substate];
                             }
                         }
                     }
@@ -228,7 +228,7 @@ public class Lexicon implements java.io.Serializable {
      * recognized numbers are 1-5: 5 is fairly English-specific; 4, 3, and 2 look for various word features (digits,
      * dashes, etc.) which are only vaguely English-specific; 1 uses the last two characters combined with a simple
      * classification by capitalization.
-     * 
+     *
      * @param word The word to make a signature for
      * @param sentenceInitial Sentence-initial capitalized words are treated differently
      * @return A String that is its signature (equivalence class)
@@ -534,7 +534,8 @@ public class Lexicon implements java.io.Serializable {
         return sb.toString();
     } // end getSignature()
 
-    public double[] score(final StateSet stateSet, final short tag, final boolean noSmoothing, final boolean isSignature) {
+    public double[] score(final StateSet stateSet, final short tag, final boolean noSmoothing,
+            final boolean isSignature) {
         return score(stateSet.getWord(), tag, stateSet.from, noSmoothing, isSignature);
     }
 
@@ -547,10 +548,10 @@ public class Lexicon implements java.io.Serializable {
      * Pmle(T|"unseen") pb_T_W = P(T|W). If (c_W > smoothInUnknownsThreshold) = c_TW/c_W Else (if not smart mutation)
      * pb_T_W = bayes prior smooth[1] with p_T_U p_T= Pmle(T) p_W = Pmle(W) pb_W_T = pb_T_W * p_W / p_T [Bayes rule]
      * Note that this doesn't really properly reserve mass to unknowns.
-     * 
+     *
      * Unseen: c_TS = count(T,Sig|Unseen) c_S = count(Sig) c_T = count(T|Unseen) c_U = totalUnseen above p_T_U =
      * Pmle(T|Unseen) pb_T_S = Bayes smooth of Pmle(T|S) with P(T|Unseen) [smooth[0]] pb_W_T = P(W|T) inverted
-     * 
+     *
      * @param loc The position in the sentence. <i>In the default implementation this is used only for unknown words to
      *            change their probability distribution when sentence initial
      * @return A double valued score, usually P(word|tag)
@@ -563,7 +564,7 @@ public class Lexicon implements java.io.Serializable {
 
         final double[] tagStateCounter = tagCounter[tag];
         final double[] unseenTagStateCounter = unseenTagCounter[tag];
-        final HashMap<String, double[]> wordTagCounter = observedTokenFractionalCounts[tag];
+        final Map<String, double[]> wordTagCounter = observedTokenFractionalCounts[tag];
 
         double[] pb_W_T;
         if (!isSignature && (seen || noSmoothing)) {
@@ -587,7 +588,7 @@ public class Lexicon implements java.io.Serializable {
     }
 
     /**
-     * 
+     *
      * @param word
      * @param tag
      * @param noSmoothing
@@ -595,13 +596,13 @@ public class Lexicon implements java.io.Serializable {
      * @param tagStateCounter
      * @param unseenTagStateCounter
      * @param wordTagCounter
-     * 
+     *
      * @return Probabilities of producing <code>word</code> for each substate of <code>tag</code>. Indexed by substate
      *         indices.
      */
     private double[] scoreObservedWord(final String word, final short tag, final boolean noSmoothing, final double c_W,
             final double[] tagStateCounter, final double[] unseenTagStateCounter,
-            final HashMap<String, double[]> wordTagCounter) {
+            final Map<String, double[]> wordTagCounter) {
 
         final double[] pb_W_T = new double[numSubStates[tag]];
         for (int substate = 0; substate < pb_W_T.length; substate++) {
@@ -653,12 +654,12 @@ public class Lexicon implements java.io.Serializable {
     }
 
     /**
-     * 
+     *
      * @param word
      * @param tag
      * @param loc
      * @param isSignature
-     * 
+     *
      * @return Probabilities of producing <code>word</code> for each substate of <code>tag</code>. Indexed by substate
      *         indices.
      */
@@ -770,19 +771,19 @@ public class Lexicon implements java.io.Serializable {
 
             if (unkFractionalCounts != null) {
                 if (unkFractionalCounts[state] == null) {
-                    unkFractionalCounts[state] = new HashMap<String, double[]>();
+                    unkFractionalCounts[state] = new Object2ObjectOpenHashMap<String, double[]>();
                 }
                 if (!unkFractionalCounts[state].containsKey(sig)) {
                     unkFractionalCounts[state].put(sig, new double[numSubStates[state]]);
                 }
             }
-            final double[] unseenWordSubstateCounter = unkFractionalCounts != null ? unkFractionalCounts[state]
-                    .get(sig) : null;
+            final double[] unseenWordSubstateCounter = unkFractionalCounts != null ? unkFractionalCounts[state].get(sig)
+                    : null;
 
             // guarantee that the wordToTagCounter element exists so we can
             // tally the combination
             if (observedTokenFractionalCounts[state] == null) {
-                observedTokenFractionalCounts[state] = new HashMap<String, double[]>();
+                observedTokenFractionalCounts[state] = new Object2ObjectOpenHashMap<String, double[]>();
             }
             double[] substateCounter = observedTokenFractionalCounts[state].get(word);
             if (substateCounter == null) {
@@ -796,9 +797,8 @@ public class Lexicon implements java.io.Serializable {
             }
 
             final StateSet currentState = tags.get(position);
-            final double scalingMultiplier = IEEEDoubleScaling.scalingMultiplier(currentState.outsideScoreScale()
-                    - sentenceScale)
-                    / sentenceScore;
+            final double scalingMultiplier = IEEEDoubleScaling
+                    .scalingMultiplier(currentState.outsideScoreScale() - sentenceScale) / sentenceScore;
 
             for (short substate = 0; substate < nSubStates; substate++) {
 
@@ -842,7 +842,7 @@ public class Lexicon implements java.io.Serializable {
     /**
      * Returns a String representation of unknown-word features, retrieved from {@link #cachedSignatures} or
      * {@link #cachedSentenceInitialSignatures} if possible.
-     * 
+     *
      * @return a String representation of unknown-word features
      */
     private String getCachedSignature(final String word, final int sentencePosition) {
@@ -867,7 +867,7 @@ public class Lexicon implements java.io.Serializable {
     /**
      * Merge states, combining information about words we have seen. THIS DOES NOT UPDATE INFORMATION FOR UNSEEN WORDS!
      * For that, retrain the Lexicon!
-     * 
+     *
      * @param mergeThesePairs
      * @param substateConditionalProbabilities
      */
@@ -914,7 +914,7 @@ public class Lexicon implements java.io.Serializable {
 
     /**
      * Merges a single pair of state splits
-     * 
+     *
      * @param mergeCandidate
      * @return A new {@link Lexicon}, merging the state-split of the specified {@link MergeCandidate} and including
      *         counts derived from this {@link Lexicon}
@@ -942,7 +942,7 @@ public class Lexicon implements java.io.Serializable {
                 continue;
             }
 
-            newLexicon.observedTokenFractionalCounts[state] = new HashMap<String, double[]>();
+            newLexicon.observedTokenFractionalCounts[state] = new Object2ObjectOpenHashMap<String, double[]>();
 
             for (final String word : observedTokenFractionalCounts[state].keySet()) {
 
@@ -966,7 +966,7 @@ public class Lexicon implements java.io.Serializable {
                     continue;
                 }
 
-                newLexicon.unkFractionalCounts[state] = new HashMap<String, double[]>();
+                newLexicon.unkFractionalCounts[state] = new Object2ObjectOpenHashMap<String, double[]>();
 
                 for (final String word : unkFractionalCounts[state].keySet()) {
 
@@ -1084,7 +1084,7 @@ public class Lexicon implements java.io.Serializable {
      * each possible merge (e.g., NN_1 into NN_0), but do not account for the interactions between multiple simultaneous
      * non-terminal merges. I.e., these counts will always be an overestimate of the rule-count savings when multiple
      * NTs are merged en-masse.
-     * 
+     *
      * @return Array of rule-count savings, indexed by state, split/substate
      */
     public int[][] estimatedMergeRuleCountDelta(final Grammar grammar) {
@@ -1206,7 +1206,7 @@ public class Lexicon implements java.io.Serializable {
      * {@link #numSubStates}, and {@link #tagCounter}. Intended for use when passing a {@link Lexicon} to
      * {@link GrammarMerger#merge(Grammar, Lexicon, boolean[][][], double[][])}, which mutates the {@link Lexicon} in
      * place.
-     * 
+     *
      * @return A clone of this {@link Lexicon}, duplicating {@link #observedTokenFractionalCounts},
      *         {@link #numSubStates}, and {@link #tagCounter}.
      */
@@ -1223,10 +1223,10 @@ public class Lexicon implements java.io.Serializable {
         }
         for (int i = 0; i < numSubStates.length; i++) {
             if (observedTokenFractionalCounts[i] != null) {
-                newLexicon.observedTokenFractionalCounts[i] = new HashMap<String, double[]>();
+                newLexicon.observedTokenFractionalCounts[i] = new Object2ObjectOpenHashMap<String, double[]>();
                 for (final String key : observedTokenFractionalCounts[i].keySet()) {
-                    newLexicon.observedTokenFractionalCounts[i].put(key, observedTokenFractionalCounts[i].get(key)
-                            .clone());
+                    newLexicon.observedTokenFractionalCounts[i].put(key,
+                            observedTokenFractionalCounts[i].get(key).clone());
                 }
             }
         }
